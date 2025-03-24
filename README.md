@@ -29,6 +29,6 @@ Adapting to various OS architectures, such as 32-bit versus 64-bit, is known as 
 
 ## Contributors
 
+Ateefa Luqman - https://github.com/AteefaLuqman </br>
 Mayank Gupta - https://github.com/Mayank0619gupta </br>
 Mukul - https://github.com/Mukul23022005 </br>
-Ateefa Luqman - https://github.com/AteefaLuqman </br>
