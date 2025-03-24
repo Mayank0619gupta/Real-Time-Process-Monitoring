@@ -1,69 +1,34 @@
-# Welcome to your Lovable project
+# Real time process monitoring
 
-## Project info
+## Description
 
-**URL**: https://lovable.dev/projects/1a227c58-7354-454f-937f-95ea7ed64d24
+A program under execution, including its code, ongoing operations, and the system resources it uses (such as CPU, memory, and input/output), is referred to as a "process" in an operating system (OS). In order to guarantee effective system performance, identify irregularities, and resolve problems, real-time process monitoring entails watching and evaluating these processes as they run with the least amount of delay.
 
-## How can I edit this code?
+For this purpose, a dashboard is a graphical interface that compiles and displays important process-related metrics, allowing users, developers, or system administrators to make well-informed decisions fast.
 
-There are several ways of editing your application.
+## Key Features
 
-**Use Lovable**
+1.Performance tracking: Keep an eye on process network activity, disk I/O, memory utilization, and CPU usage. </br>
+2.Resource Management: To maximize system efficiency, identify procedures that use a lot of resources. </br>
+3.Identify anomalous activity, such as crashes, memory leaks, or rogue programs, using anomaly detection. </br>
+4.User Interaction: Offer an easy-to-use interface for viewing and controlling processes (e.g., prioritize, terminate). </br>
+5.Scalability: Enable real-time monitoring across one or more systems. </br>
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1a227c58-7354-454f-937f-95ea7ed64d24) and start prompting.
+## Applications
 
-Changes made via Lovable will be committed automatically to this repo.
+System administration: Keep an eye on workstations or servers to adjust performance. </br>
+Development: Monitor the behavior of processes to debug applications. </br>
+Education: Explain OS ideas such as resource allocation and process scheduling. </br>
 
-**Use your preferred IDE**
+## Limitations
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Latency: Making sure that changes happen "real-time" and without any lag. </br>
+Scalability: The ability of a busy system to manage hundreds or thousands of processes. </br>
+Accuracy: Taking OS-level caching and reporting metric delays into account. </br>
+Adapting to various OS architectures, such as 32-bit versus 64-bit, is known as portability. </br>
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Contributors
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/1a227c58-7354-454f-937f-95ea7ed64d24) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+Mayank Gupta - https://github.com/Mayank0619gupta </br>
+Mukul - https://github.com/Mukul23022005 </br>
+Ateefa Luqman - https://github.com/AteefaLuqman </br>
