@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>System Monitoring Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+            color: #00ccff;
+            margin-bottom: 20px;
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h3 {
+            margin: 0 0 15px 0;
+            color: #00ccff;
+        }
+        .charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        canvas {
+            background-color: #2a2a2a;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #2a2a2a;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #3a3a3a;
+        }
+        th {
+            background-color: #00ccff;
+            color: #1a1a1a;
+        }
+        .timestamp {
+            text-align: right;
+            font-size: 0.9em;
+            color: #aaaaaa;
+            margin-bottom: 20px;
+        }
+        .action-btn {
+            padding: 5px 10px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .suspend-btn {
+            background-color: #ffcc00;
+            color: #1a1a1a;
+        }
+        .terminate-btn {
+            background-color: #ff0066;
+            color: #ffffff;
+        }
+        .resume-btn {
+            background-color: #00ff99;
+            color: #1a1a1a;
+        }
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>System Monitoring Dashboard</h1>
+        <div class="timestamp" id="timestamp">Last updated: {{ metrics.timestamp }}</div>
+
+        <!-- Cards -->
+        <div class="cards">
+            <div class="card">
+                <h3>CPU Usage</h3>
+                <p id="cpu-overall">Overall: {{ metrics.cpu.overall }}%</p>
+                <p id="cpu-per-core">Per Core: {{ metrics.cpu.per_core|join(', ') }}%</p>
+            </div>
+            <div class="card">
+                <h3>Memory Usage</h3>
+                <p id="mem-used">Used: {{ metrics.memory.used }} GB</p>
+                <p id="mem-available">Available: {{ metrics.memory.available }} GB</p>
+                <p id="mem-percent">Percent: {{ metrics.memory.percent }}%</p>
+            </div>
+            <div class="card">
+                <h3>Disk I/O</h3>
+                <p id="disk-read">Read: {{ metrics.disk_io.read_mb }} MB</p>
+                <p id="disk-write">Write: {{ metrics.disk_io.write_mb }} MB</p>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts">
+            <div>
+                <canvas id="cpuChart"></canvas>
+            </div>
+            <div>
+                <canvas id="memoryChart"></canvas>
+            </div>
+            <div>
+                <canvas id="diskChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Process Table -->
+        <h2>Running Processes</h2>
+        <table id="process-table">
+            <thead>
+                <tr>
+                    <th>PID</th>
+                    <th>Name</th>
+                    <th>CPU %</th>
+                    <th>Memory %</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="process-body">
+                {% for process in metrics.processes %}
+                <tr>
+                    <td>{{ process.pid }}</td>
+                    <td>{{ process.name }}</td>
+                    <td>{{ process.cpu_percent }}</td>
+                    <td>{{ process.memory_percent }}</td>
+                    <td>{{ process.status }}</td>
+                    <td>
+                        <button class="action-btn suspend-btn" onclick="suspendProcess({{ process.pid }})">Pause</button>
+                        <button class="action-btn terminate-btn" onclick="terminateProcess({{ process.pid }})">Delete</button>
+                        <button class="action-btn resume-btn" onclick="resumeProcess({{ process.pid }})">Resume</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Chart initialization
+        const cpuChart = new Chart(document.getElementById('cpuChart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'CPU Usage (%)',
+                    data: [],
+                    borderColor: '#00ccff',
+                    backgroundColor: 'rgba(0, 204, 255, 0.2)',
+                    fill: true,
+                }]
+            },
+            options: { scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+
+        const memoryChart = new Chart(document.getElementById('memoryChart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Memory Usage (%)',
+                    data: [],
+                    borderColor: '#ffcc00',
+                    backgroundColor: 'rgba(255, 204, 0, 0.2)',
+                    fill: true,
+                }]
+            },
+            options: { scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+
+        const diskChart = new Chart(document.getElementById('diskChart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'Read (MB)', data: [], borderColor: '#00ff99', backgroundColor: 'rgba(0, 255, 153, 0.2)', fill: true },
+                    { label: 'Write (MB)', data: [], borderColor: '#ff0066', backgroundColor: 'rgba(255, 0, 102, 0.2)', fill: true }
+                ]
+            },
+            options: { scales: { y: { beginAtZero: true } } }
+        });
+
+        // Fetch and update data every 5 seconds
+        function updateDashboard() {
+            fetch('/metrics')
+                .then(response => response.json())
+                .then(data => {
+                    // Update cards
+                    document.getElementById('cpu-overall').textContent = Overall: ${data.cpu.overall}%;
+                    document.getElementById('cpu-per-core').textContent = Per Core: ${data.cpu.per_core.join(', ')}%;
+                    document.getElementById('mem-used').textContent = Used: ${data.memory.used} GB;
+                    document.getElementById('mem-available').textContent = Available: ${data.memory.available} GB;
+                    document.getElementById('mem-percent').textContent = Percent: ${data.memory.percent}%;
+                    document.getElementById('disk-read').textContent = Read: ${data.disk_io.read_mb} MB;
+                    document.getElementById('disk-write').textContent = Write: ${data.disk_io.write_mb} MB;
+                    document.getElementById('timestamp').textContent = Last updated: ${data.timestamp};
+
+                    // Update process table
+                    const tbody = document.getElementById('process-body');
+                    tbody.innerHTML = '';
+                    data.processes.forEach(proc => {
+                        if (proc.pid > 0) { // Filter out PID 0 (System Idle Process)
+                            const row = `<tr>
+                                <td>${proc.pid}</td>
+                                <td>${proc.name}</td>
+                                <td>${proc.cpu_percent}</td>
+                                <td>${proc.memory_percent}</td>
+                                <td>${proc.status}</td>
+                                <td>
+                                    <button class="action-btn suspend-btn" onclick="suspendProcess(${proc.pid})">Pause</button>
+                                    <button class="action-btn terminate-btn" onclick="terminateProcess(${proc.pid})">Delete</button>
+                                    <button class="action-btn resume-btn" onclick="resumeProcess(${proc.pid})">Resume</button>
+                                </td>
+                            </tr>`;
+                            tbody.innerHTML += row;
+                        }
+                    });
+
+                    // Update charts
+                    const now = new Date().toLocaleTimeString();
+                    updateChart(cpuChart, now, data.cpu.overall);
+                    updateChart(memoryChart, now, data.memory.percent);
+                    updateChart(diskChart, now, [data.disk_io.read_mb, data.disk_io.write_mb]);
+                });
+        }
+
+        function updateChart(chart, label, data) {
+            chart.data.labels.push(label);
+            if (Array.isArray(data)) {
+                data.forEach((value, index) => {
+                    chart.data.datasets[index].data.push(value);
+                });
+            } else {
+                chart.data.datasets[0].data.push(data);
+            }
+            if (chart.data.labels.length > 10) {
+                chart.data.labels.shift();
+                chart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+            chart.update();
+        }
+
+        // Process control functions
+        function suspendProcess(pid) {
+            if (pid <= 0) return alert("Cannot suspend system process with PID 0");
+            fetch(/suspend/${pid}, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    updateDashboard(); // Refresh data after action
+                })
+                .catch(error => alert(Error: ${error}));
+        }
+
+        function terminateProcess(pid) {
+            if (pid <= 0) return alert("Cannot terminate system process with PID 0");
+            if (confirm(Are you sure you want to terminate process ${pid}?)) {
+                fetch(/terminate/${pid}, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                        updateDashboard(); // Refresh data after action
+                    })
+                    .catch(error => alert(Error: ${error}));
+            }
+        }
+
+        function resumeProcess(pid) {
+            if (pid <= 0) return alert("Cannot resume system process with PID 0");
+            fetch(/resume/${pid}, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    updateDashboard(); // Refresh data after action
+                })
+                .catch(error => alert(Error: ${error}));
+        }
+
+        // Initial update and set interval
+        updateDashboard();
+        setInterval(updateDashboard, 5000);
+    </script>
+</body>
+</html>
